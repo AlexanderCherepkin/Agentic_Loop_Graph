@@ -1,0 +1,14 @@
+{
+  "name": "lighthouse-audit-control-agent",
+  "version": "1.0",
+  "agents": [
+    {
+      "id": "lighthouse_audit_control",
+      "name": "Lighthouse Audit Control Agent",
+      "description": "Audit and control Lighthouse metrics and accessibility standards",
+      "tools": ["audit_lighthouse_metrics", "validate_accessibility", "generate_performance_report"],
+      "priority": "high"
+    }
+  ],
+  "monitoring_enabled": true
+}

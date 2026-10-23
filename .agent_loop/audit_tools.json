@@ -1,0 +1,103 @@
+{
+  "name": "Lighthouse Audit Tools Suite",
+  "version": "1.0.0",
+  "description": "Collection of audit tools for website performance and accessibility analysis",
+  "tools": [
+    {
+      "tool_name": "lighthouse_performance_audit",
+      "description": "Comprehensive performance audit using Lighthouse metrics including First Contentful Paint, Largest Contentful Paint, Total Blocking Time, Cumulative Layout Shift, and Speed Index.",
+      "category": "performance",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Target URL to audit"
+          },
+          "budget_overrides": {
+            "type": "array",
+            "description": "Custom performance budgets"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "tool_name": "lighthouse_accessibility_audit",
+      "description": "Accessibility audit checking WCAG compliance including color contrast, ARIA attributes, heading structure, form labels, and keyboard navigation.",
+      "category": "accessibility",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Target URL to audit"
+          },
+          "wcag_version": {
+            "type": "string",
+            "enum": ["2.0", "2.1"],
+            "description": "WCAG version to check against (default: 2.1)"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "tool_name": "lighthouse_best_practices_audit",
+      "description": "Best practices audit covering HTTPS usage, safe attribution, VULNERABILITIES, Progressive Web App readiness, and other security best practices.",
+      "category": "security",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Target URL to audit"
+          },
+          "pwa_enabled": {
+            "type": "boolean",
+            "description": "Enable PWA-specific checks (default: false)"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "tool_name": "lighthouse_seo_audit",
+      "description": "SEO audit checking meta tags, structured data, canonical URLs, robots.txt, sitemap availability, and other search engine optimization factors.",
+      "category": "seo",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Target URL to audit"
+          },
+          "crawl_budget": {
+            "type": "integer",
+            "description": "Maximum pages to crawl (default: 50)"
+          }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "tool_name": "lighthouse_pwa_audit",
+      "description": "Progressive Web App audit checking manifest validity, service worker registration, HTTPS enforcement, and offline capabilities.",
+      "category": "pwa",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Target URL to audit"
+          },
+          "offline_enabled": {
+            "type": "boolean",
+            "description": "Enable offline-capability checks (default: true)"
+          }
+        },
+        "required": ["url"]
+      }
+    }
+  ]
+}

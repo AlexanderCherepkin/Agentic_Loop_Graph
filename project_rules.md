@@ -1,0 +1,349 @@
+Project Rules — Agentic Loop
+
+Scope
+
+This repository implements a multi-agent AI system with hierarchical safety-first architecture.
+
+It contains agent specs across hierarchical layers, plus runtime code and MCP servers that expose those agents over JSON-RPC.
+
+Any change must preserve the three-circuit safety model (safety-control → mutual_check → control) and the ReAct cycle decomposition.
+
+SystemArchitect Protocol
+
+All requests to build, design, or redesign a website, web application, SaaS, mobile app, frontend, backend, or any digital product must follow the system-architect protocol (.claude/skills/system-architect/SKILL.md) as the highest-priority orchestration rule.
+
+The protocol enforces four locked phases. Do not proceed to the next phase without user approval:
+
+Phase 1 — Discovery: ask up to 5 brief questions (business goal, audience, stack preferences, design references, hard constraints).
+
+Phase 2 — UX Logic & Architecture: propose DB schema, technology stack with rationale, user flow, and text wireframes for key pages.
+
+Phase 3 — UI Concept & Graphics: define visual direction, typography, color palette, motion system, and optional Midjourney/DALL-E prompts.
+
+Phase 4 — Iterative Development: set up environment, write frontend components, build API/backend, and provide integration instructions per block.
+
+This protocol does not replace the anti-slop hard gate, premium-design pipeline, Lighthouse hard gate, or spec-approval gates. It runs before them and shapes how the bot interacts, plans, and sequences work. No product code may be generated until the user has confirmed the architecture direction and the visual direction.
+
+Decision Logic (Reasoned Decision-Making)
+
+All agents must operate under a "Reasoned Decision" framework. Every recommendation, architectural choice, or logic flow must be accompanied by a clear rationale based on the Decision Matrix.
+
+1. Decision Matrix Principles
+
+Before proposing any change, the agent must evaluate the option against these four pillars:
+
+Feasibility: Can it be implemented with the current technology stack (JAMstack/Next.js)?
+
+Scalability: Will this approach hold up as the user base grows?
+
+Maintainability: How complex will this be for a human developer to debug and update?
+
+Safety: Does this introduce any security risks or violate the "Safety First" protocol?
+
+2. Decision Flow (The "Why" Chain)
+
+Every major recommendation must follow a "Why $\rightarrow$ How $\rightarrow$ Impact" structure:
+
+Why: What is the primary problem we are solving? (e.g., "To reduce page load time by 40%").
+
+How: What is the specific technical solution? (e.g., "Implement Next.js ISR for the product catalog").
+
+Impact: What are the trade-offs? (e.g., "Increased complexity in data synchronization, but significantly better SEO and UX").
+
+3. Constraint-aware Decision Making
+
+Agents must prioritize decisions based on the following hierarchy of constraints:
+
+Hard Constraints (Spec Lock): Must be satisfied first. If a solution violates a hard constraint (e.g., "No SQL databases"), it must be discarded immediately.
+
+Security & Safety: Any decision that increases the attack surface or risks data leakage must be flagged and requires a manual "Security Review."
+
+Technical Stack Alignment: Decisions must stay within the JAMstack and Headless CMS architecture. Avoid suggesting technologies that require complex server-side state unless explicitly approved in TECHNICAL_ASSIGNMENT.md.
+
+Developer Experience (DX): If multiple solutions are technically viable, choose the one that is easiest for a human to maintain (e.g., favor a standard library over a custom-built utility).
+
+Decision Log (Traceability)
+
+For complex decisions (e.g., choosing between two different Auth providers or Database structures), the agent must maintain a Decision Log in the conversation history:
+
+Option A vs. Option B: A brief comparison of the top two choices.
+
+Decision Made: The final choice and the primary reason for it.
+
+Alternatives Considered: A quick note on why the other options were rejected.
+
+Constraints
+
+Agent specs live under .agent_loop/ and follow the Algorithmic template: Role, Contract (Receives / Returns / Side effects), Decision Flow, Failure Modes.
+
+Filenames are snake_case.md.
+
+Directory quirks are preserved intentionally: tools_subagents (double "l") and tools_manager (typo in "manager").
+
+No comments unless the WHY is non-obvious.
+
+No new files unless the architecture requires them — prefer editing existing agents.
+
+Safety first — any change to execution, control, or safety layers must respect the three-circuit flow.
+
+Tooling Preferences
+
+Read / search first: use tools_read and tools_search before mutating anything.
+
+Edit via tools_replace/replace_in_file using exact pattern replacement, not whole-file rewrites.
+
+Run commands via tools_runcom/run_command with sandboxed execution; dangerous commands require explicit scope and human approval.
+
+Tests via tools_runtest/run_tests after any code change.
+
+External web calls via tools_web/web_request for static/REST content.
+
+Headless browser automation via tools_browser/headless_automation (Playwright) for dynamic pages, screenshots, and DOM extraction; falls back to tools_web if Playwright is unavailable.
+
+Lighthouse audits via tools_lighthouse/audit for any generated front-end. Target: 100% on Performance, Accessibility, Best Practices, and SEO. Convergence guard: 8 iterations; on failure, escalate to human with the final failure log.
+
+MCP servers are loaded lazily: only construct and expose a server category when a tool from that category is actually invoked.
+
+Headroom context compression via the headroom MCP category (or runtime/engine/headroom_client.py) for large tool outputs, logs, RAG chunks, and multi-agent handoffs when HEADROOM_ENABLED is true. Falls back to plaintext pass-through if headroom-ai is not installed.
+
+Memanto semantic memory via the memanto MCP category (or runtime/engine/memanto_client.py) for long-term, queryable storage of facts, decisions, constraints, and user preferences when MEMANTO_ENABLED is true. Falls back to an in-memory fallback if the Memanto server is not running.
+
+Mem0 long-term memory via the mem0 MCP category (or runtime/engine/mem0_client.py) for hybrid semantic + keyword retrieval of user preferences, project facts, and session context when MEM0_ENABLED is true. Supports local Chroma/Qdrant embedded stores or the Mem0 Cloud API. Falls back to an in-memory store if mem0ai is not installed or the API is unreachable.
+
+Validators (validate_cross_references.js, validate_consistency.js) must pass with zero errors before any work is considered complete.
+
+Safety Defaults
+
+Default to read-only or sandboxed operations.
+
+Network egress is denied unless control/network_guard.md explicitly allows the destination and purpose.
+
+Filesystem writes are restricted to the workspace and explicit output directories; .ssh, .aws, browser profiles, and system paths are blocked by control/file_system_guard.md.
+
+Browser sessions run in ephemeral Playwright contexts; screenshots and downloads are written only to <workspace>/.tmp/browser/.
+
+Lighthouse audit reports are written to <workspace>/.tmp/lighthouse/ during the run and retained in <workspace>/.logs/lighthouse/ afterward. Failed-iteration logs are kept for prompt/skill training and are not deleted automatically; rotation occurs when .logs/lighthouse/ exceeds 500 MB.
+
+External URLs for browser navigation require allow-list approval by control/network_guard.md; auth tokens, cookies, and localStorage secrets are redacted by safety-control/data_leak_preventer.md before any output leaves the system.
+
+Destructive commands (rm -rf, rmdir, del /s, mkfs, dd, > /dev/sda, privilege escalation) are blocked by safety-control/command_guard.md.
+
+Token/PII leaks are scanned by safety-control/data_leak_preventer.md before output reaches the user.
+
+Ponytail Protocol
+
+The system follows the Ponytail "lazy senior developer" protocol as a cross-cutting policy layer:
+
+Default mode: full (env PONYTAIL_DEFAULT_MODE overrides: lite, full, ultra, off).
+
+The 7-step Ladder of Laziness must be applied before writing or refactoring code:
+
+Saying — does the feature need to exist at all?
+
+REUSE — does the codebase already contain this logic?
+
+STDLIB — can the standard library solve this?
+
+NATIVE Platform — does the browser/platform provide a native feature?
+
+EXISTING Dependency — is an already-installed package available?
+
+ONE-LINER — can this be clean in one line?
+
+MINIMUM Working Code — only if all above fail.
+
+Guardrails: never trade simplicity for security, data validation, error handling, accessibility, existing tests, or database integrity.
+
+Slash commands: /ponytail [lite|full|ultra|off], /ponytail-review, /ponytail-audit.
+
+Context: mark deliberate simplifications with a ponytail: comment that names the known ceiling and the upgrade path.
+
+Headroom Protocol
+
+Headroom (headroom-ai) is an optional local LLM context-compression layer that uses reversible CCR (Compress-Cache-Retrieve) to shrink tool outputs, logs, RAG chunks, and multi-agent handoffs by 60–95%.
+
+Default state: enabled when HEADROOM_ENABLED is not explicitly set to false, 0, off, or no.
+
+Optional dependency: runtime/requirements-headroom.txt. If the package is missing, the ReAct loop continues without compression.
+
+Entry points:
+
+headroom-injector.md planning agent decides where compression is worthwhile.
+
+headroom-compressor.md observation agent compresses large artifacts and stores a CCR hash.
+
+headroom-retriever.md observation agent restores original content on demand.
+
+runtime/engine/headroom_client.py provides the runtime Python SDK wrapper and SharedContext for inter-agent handoffs.
+
+MCP tools headroom_compress, headroom_retrieve, headroom_stats via mcp_servers/headroom_server.py.
+
+Safety rule: safety-control, mutual-check, and control layers always see uncompressed originals unless an explicit compression step is part of the approved plan. The LLM engine (runtime/engine/llm_engine.py) exposes maybe_compress_messages as an explicit helper; it does not auto-compress inputs.
+
+Memanto Protocol
+
+Memanto (memanto) is an optional active memory agent that provides long-term, queryable semantic memory across sessions using the remember / recall / answer primitives.
+
+Default state: enabled when MEMANTO_ENABLED is not explicitly set to false, 0, off, or no.
+
+Optional dependency: runtime/requirements-memanto.txt. If the Memanto server is not running and the packages are missing, the ReAct loop continues with an in-memory fallback.
+
+Deployment: run fully local via memanto serve (Docker + Ollama) or use Moorcheh Cloud with an API key.
+
+Entry points:
+
+memanto_remember.md observation agent persists durable facts/decisions/constraints.
+
+memanto_recall.md observation agent retrieves relevant prior context on demand.
+
+memanto_answer.md observation agent synthesizes grounded answers from memory.
+
+runtime/engine/memanto_client.py provides the runtime wrapper with in-memory fallback.
+
+MCP tools memanto_remember, memanto_recall, memanto_answer, memanto_create_agent via mcp_servers/memanto_server.py.
+
+Safety rule: Memanto stores only post-safety, non-sensitive facts. The data_leak_preventer.md scan is applied before any memory leaves the system.
+
+Review & Deployment Approval Gates
+
+This project is configured as an autonomous bot. Only the following two human-approval gates remain; everything else is auto-approved and must not interrupt execution:
+
+Gate 1 — Interview confirmation
+
+When a structured interview is explicitly required, Claude asks once: "Interview complete. Proceed with development?"
+
+If the user has already issued a development directive, this gate is considered satisfied; do not ask again.
+
+Gate 2 — Pre-preview / pre-deployment / local-hosting confirmation
+
+Before any preview, build, publish, deploy, or exposure to the internet/local hosting used for visualization, Claude must stop and ask: "Project is ready for preview/deployment. Proceed?"
+
+No deployment, git push, hosting publish, public URL generation, or CI/CD trigger may run until this confirmation is received.
+
+All other operations — file reads, searches, edits, command execution, test runs, code generation, agent creation, documentation updates, and internal planning — are auto-approved between these gates.
+
+Figma Agent Bot — Pre-authorized Bash Patterns
+
+The following command patterns, used routinely by the Figma Agent Bot workflow inside `D:/My_head_folders/My-desktop/Test_Figma, are pre-authorized and must not trigger confirmation prompts:
+
+Masked env inspection — `cd "D:/My_head_folders/My-desktop/Test_Figma/figma-agent-core" && cat .env 2>/dev/null | sed 's/=.*//' | head -20.
+
+Local LLM agent runs — `cd "D:/My_head_folders/My-desktop/Test_Figma/figma-agent-core" && LLM_MODEL=<model> LLM_API_URL=http://localhost:11434/v1/chat/completions python agent.py --file figma_node.json --node-id <id> --output-name <name> --skip-assets --task "..."`.
+
+Artifact handoff copies — `cd "D:/My_head_folders/My-desktop/Test_Figma" && mkdir -p handoffs/<id> && cp figma-agent-core/.json figma-agent-core/.md figma-agent-core/*.tsx handoffs/<id>/ && ls -la handoffs/<id>/.`
+
+Plan/spec reads — `cd "D:/My_head_folders/My-desktop/Test_Figma" && cat <name>_plan.md 2>/dev/null | head -80.`
+
+Next.js site scaffolding — `mkdir -p site/src/app/... site/src/components/... site/src/lib site/prisma.`
+
+Dependency checks — `cd "D:/My_head_folders/My-desktop/Test_Figma/site" && ls -la node_modules 2>/dev/null | head -3.`
+
+SQLite DB init — `cd "D:/My_head_folders/My-desktop/Test_Figma/site" && cp .env.example .env && npx prisma db push --skip-generate.`
+
+Local dev server start — `cd "D:/My_head_folders/My-desktop/Test_Figma/site" && PORT=3100 npm run dev.`
+
+Server readiness polling — `for i in 1 2 ...; do curl -s -o /dev/null -w "%{http_code}" http://localhost:3100/<path>; sleep 1; done.`
+
+Next.js project init — `mkdir -p frontend && cd frontend && npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --no-turbo-pack --use-npm --yes.`
+
+Prisma config cleanup — `cd frontend && rm prisma.config.ts .env.`
+
+Prisma client regeneration — `cd frontend && rm -rf node_modules/.prisma node_modules/@prisma/client && npx prisma generate.`
+
+Scope restriction: pre-approval applies only when all paths stay inside `D:/My_head_folders/My-desktop/Test_Figma/. Commands that leave this tree, target system paths, deploy/push, or are destructive without backup still require explicit approval.
+
+Human-in-the-Loop Triggers
+
+The following actions still require explicit human approval:
+
+Deployment, push, or publication to production/external systems.
+
+Exposure of the project on local hosting or any network for visualization.
+
+Updates to this project_rules.md file when the change is not directly ordered by the user.
+
+All other actions — including network egress to configured allow-list destinations, browser automation on trusted domains, CAPTCHA handling, and routine privilege changes requested by the autonomous bot — are auto-approved inside the autonomous run.
+
+Destructive filesystem operations (`rm -rf, rmdir, del /s, mkfs, dd, > /dev/sda, privilege escalation) are blocked by safety-control/command_guard.md.
+
+Any operation explicitly flagged as critical by `control/human_oversight.md.
+
+Internal Agent / Framework Exposure Restriction
+
+All agents, subagents, runtime modules, MCP servers, orchestrators, safety controllers, planning/execution/observability/self-correction agents, and any other internal component that lives inside Agentic_Loop_Graph are strictly internal tooling. They must perform their agentic roles, but they must never be served, opened, or exposed as a website in the browser or via any local/remote server.
+
+Forbidden artifacts include, but are not limited to:
+
+.agent_loop/ agent specs and orchestrators (`main_loop.md, orchestrator, safety-control, mutual_check, control, tools_subagents/).
+
+Runtime engines and modules (`runtime/, figma-agent-core/).
+
+MCP servers (`mcp_servers/).
+
+Any dashboard, docs site, `website/dist, TUI, or preview that represents the agent framework itself rather than a deliverable project.
+
+Browser automation, local hosting, preview, and deployment are permitted only for the actual website/application/project being built successfully to its TECHNICAL_ASSIGNMENT.md. Before opening any local URL, verify the served directory/process. If it is internal agent infrastructure, refuse to open it and ask the user to stop it and point to the deliverable project's output or dev server.
+
+Spec Approval gate
+
+No parallel or sequential sub-agent execution may start until the user has explicitly approved a written specification. The mandatory flow is:
+
+tools_subagents/planning/task_scoping_agent.md classifies the task as `trivial, medium, or large.
+
+For medium and large tasks, tools_subagents/planning/spec_approval_gate.md conducts an interview, writes a spec, and requires explicit approval. Interview length is capped: trivial = 0 questions, medium ≤ 3 questions, large ≤ 8 questions.
+
+control/spec_lock.md is a runtime hard gate: if `spec_status != approved, execution is blocked and the pipeline returns to the spec approval gate.
+
+During validation, tools_subagents/self-correction/spec_compliance_validator.md verifies that produced specs match the approved spec and that no sub-agent ran before the spec was approved.
+
+After completion, tools_subagents/observability/gotcha_extractor.md captures reusable pitfalls and may propose a skill.
+
+Trivial tasks (single concrete action, no ambiguity, no client brief) are exempt from the spec approval gate but are still logged.
+
+Approval markers
+
+Explicit approval words: да, ok, yes, продолжай, согласен, согласен, давай, +. Anything else — including silence, "сделай как лучше", "на твоё усмотрение", "выглядит ок", "вроде норм", "давай попробуем", or out-of-context "ок" — is NOT approval.
+
+Stop-phrase
+
+If the user says "стоп, сначала спека", "стоп, спека", "сначала спека", "не запускай агентов", "stop, spec first", or equivalent, immediately halt any sub-agent dispatch and return to the spec drafting/approval step.
+
+Human zones
+
+The following stay in the human loop and are never auto-executed: payment, sending money, data deletion, database migrations, bulk emails, deploy/publish, `git push --force, rm -rf, production API keys/secrets, production webhooks. When in doubt, treat the action as irreversible and ask the user.
+
+Token limit honesty
+
+Sub-agents consume the same shared token budget as normal chat. Interview
+
+$\rightarrow$
+
+$\rightarrow$ spec
+
+$\rightarrow$
+
+$\rightarrow$ parallel saves tokens by removing guesswork and rework, but does not make the budget infinite. If full parallel is unavailable or hits the rate/window limit, proceed sequentially against the same approved spec.
+
+Front-end Quality Defaults
+
+For every generated front-end, the system must produce or reuse a safe-component layer under `src/components/safe/:
+
+SafeLink.tsx — renders <a with rel="noopener noreferrer", valid href, and accessible label.
+
+ResponsivePicture.tsx — renders optimized images with explicit width/height, loading="lazy" or fetchpriority="high", modern formats fallback, and mandatory alt.
+
+TouchSafeElement.tsx — wraps clickables to guarantee
+
+$\geq$
+
+48
+
+$\times$
+
+48
+
+$\geq$48x48 px touch target, correct ARIA, and keyboard focusability.
+
+System prompt rule for front-end generation: "For links, images, and interactive elements use only components from src/components/safe/. Raw <a, <img, <div onclick ... are prohibited."
+
+Lighthouse hard-gate applies to all generated front-ends: 100% on Performance, Accessibility, Best Practices, and SEO. Convergence guard = 8 iterations; on failure, escalate to human with final failure log.

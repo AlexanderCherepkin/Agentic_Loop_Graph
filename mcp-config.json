@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "python-tools": {
+      "command": "python",
+      "args": ["-m", "mcp_servers.bootstrap", "--serve"]
+    }
+  }
+}

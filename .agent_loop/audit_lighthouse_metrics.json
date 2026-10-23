@@ -1,0 +1,39 @@
+{
+  "tool_name": "audit_lighthouse_metrics",
+  "description": "Audit Lighthouse metrics including Performance, Accessibility, Best Practices, and SEO",
+  "parameters": {
+    "url": {
+      "type": "string",
+      "required": true,
+      "description": "Target URL to audit"
+    },
+    "categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "required": false,
+      "default": ["performance", "accessibility", "best-practices", "seo"],
+      "description": "Lighthouse audit categories"
+    },
+    "thresholds": {
+      "type": "object",
+      "required": false,
+      "description": "Performance thresholds: {'first-contentful-paint': 1.8, 'speed-index': 3.0}"
+    }
+  },
+  "output_schema": {
+    "performance_score": {"type": "integer"},
+    "accessibility_score": {"type": "integer"},
+    "best_practices_score": {"type": "integer"},
+    "seo_score": {"type": "integer"},
+    "metrics": {
+      "first-contentful-paint": {"type": "number"},
+      "speed-index": {"type": "number"},
+      "largest-contentful-paint": {"type": "number"}
+    },
+    "recommendations": {"type": "array", "items": {"type": "string"}}
+  },
+  "implementation_notes": {
+    "lighthouse_api": "https://developers.google.com/web/tools/lighthouse/overview",
+    "performance_budget": "Define performance budgets for CI/CD pipeline validation"
+  }
+}

@@ -1,0 +1,4 @@
+  File "<string>", line 1
+    import sys; sys.path.insert(0, '.'); from figma_agent_core import api_controller, server, main; print('SUCCESS: All modules imported' '    properties: Dict[str, Any] = field(default_factory=dict)' >> /d/My_head_folders/My-desktop/Agentic_Loop_Graph/figma-agent-core/core.py)
+                                                                                                                                                                                                            ^
+SyntaxError: invalid syntax

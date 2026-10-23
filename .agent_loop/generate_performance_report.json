@@ -1,0 +1,88 @@
+{
+  "tool_name": "generate_performance_report",
+  "description": "Generate comprehensive performance reports with Core Web Vitals and detailed metrics analysis",
+  "parameters": {
+    "url": {
+      "type": "string",
+      "required": true,
+      "description": "Target URL to analyze"
+    },
+    "report_format": {
+      "type": "string",
+      "enum": ["json", "html", "markdown"],
+      "default": "json",
+      "required": false,
+      "description": "Output format for the report"
+    },
+    "include_chromium_audit": {
+      "type": "boolean",
+      "default": true,
+      "required": false,
+      "description": "Include full Chromium audit results"
+    },
+    "sample_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 20,
+      "required": false,
+      "description": "Number of field samples for performance insights"
+    }
+  },
+  "output_schema": {
+    "report_metadata": {
+      "generated_at": {"type": "string", "format": "date-time"},
+      "url": {"type": "string"},
+      "sample_size": {"type": "integer"}
+    },
+    "core_web_vitals": {
+      "first-contentful-paint": {
+        "numeric_value": {"type": "number"},
+        "rating": {"type": "string", "enum": ["good", "needs_improvement", "poor"]},
+        "percentile_75": {"type": "number"}
+      },
+      "speed-index": {
+        "numeric_value": {"type": "number"},
+        "rating": {"type": "string", "enum": ["good", "needs_improvement", "poor"]},
+        "percentile_75": {"type": "number"}
+      },
+      "largest-contentful-paint": {
+        "numeric_value": {"type": "number"},
+        "rating": {"type": "string", "enum": ["good", "needs_improvement", "poor"]},
+        "percentile_75": {"type": "number"}
+      },
+      "cumulative-layout-shift": {
+        "numeric_value": {"type": "number"},
+        "rating": {"type": "string", "enum": ["good", "needs_improvement", "poor"]},
+        "percentile_75": {"type": "number"}
+      }
+    },
+    "performance_budget_status": {
+      "status": {"type": "string", "enum": ["within_budget", "exceeding_budget"]},
+      "metrics": {
+        "first-contentful-paint": {"target": {"type": "number"}, "actual": {"type": "number"}},
+        "speed-index": {"target": {"type": "number"}, "actual": {"type": "number"}},
+        "largest-contentful-paint": {"target": {"type": "number"}, "actual": {"type": "number"}}
+      }
+    },
+    "resource_analysis": {
+      "total_page_size": {"type": "number", "unit": "KB"},
+      "resource_count": {"type": "integer"},
+      "blocking_resources": {"type": "array", "items": {"type": "object"}}
+    },
+    "recommendations": {
+      "critical": {"type": "array", "items": {"type": "string"}},
+      "important": {"type": "array", "items": {"type": "string"}},
+      "optional": {"type": "array", "items": {"type": "string"}}
+    }
+  },
+  "implementation_notes": {
+    "core_web_vitals_thresholds": {
+      "first-contentful-paint_good": 1800,
+      "speed-index_good": 3500,
+      "largest-contentful-paint_good": 2500,
+      "cumulative-layout-shift_good": 0.1
+    },
+    "report_integration": "Integrate with Grafana for real-time performance monitoring dashboard"
+  }
+}

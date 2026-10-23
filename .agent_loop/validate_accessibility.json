@@ -1,0 +1,51 @@
+{
+  "tool_name": "validate_accessibility",
+  "description": "Validate accessibility compliance with WCAG 2.1 standards using Lighthouse and axe-core",
+  "parameters": {
+    "url_or_path": {
+      "type": "string",
+      "required": true,
+      "description": "Target URL or local file path to validate"
+    },
+    "wcag_version": {
+      "type": "string",
+      "enum": ["2.0", "2.1", "2.2"],
+      "default": "2.1",
+      "required": false,
+      "description": "WCAG version to validate against"
+    },
+    "conformance_level": {
+      "type": "string",
+      "enum": ["A", "AA", "AAA"],
+      "default": "AA",
+      "required": false,
+      "description": "Conformance level: A (basic), AA (standard), AAA (enhanced)"
+    },
+    "axe_rules": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": [],
+      "required": false,
+      "description": "Specific axe-core rules to check"
+    }
+  },
+  "output_schema": {
+    "compliance_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "wcag_level": {"type": "string"},
+    "passed_criteria": {"type": "array", "items": {"type": "object"}},
+    "violations": {
+      "type": "array",
+      "items": {
+        "id": {"type": "string"},
+        "impact": {"type": "string", "enum": ["critical", "serious", "moderate", "minor"]},
+        "description": {"type": "string"},
+        "help_url": {"type": "string"}
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "object"}}
+  },
+  "implementation_notes": {
+    "wcag_21_a_criteria": ["color_contrast_ratio", "link_name", "image_alt"],
+    "axe_core_integration": "Use axe-core for detailed accessibility violation detection"
+  }
+}

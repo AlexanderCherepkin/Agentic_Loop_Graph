@@ -1,0 +1,1 @@
+# Stub package for python-docx type hints
